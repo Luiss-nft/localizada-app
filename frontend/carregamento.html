@@ -204,6 +204,29 @@
             localStorage.setItem(localStorageKey, JSON.stringify(historico));
         }
 
+        // Função assíncrona para obter o contador de viagens do servidor
+        async function obterContador() {
+            try {
+                const response = await fetch('/contador');
+                const data = await response.json();
+                return data.contador;
+            } catch (error) {
+                console.error('Erro ao obter o contador:', error);
+                return 0;  // Retorna 0 caso haja erro
+            }
+        }
+
+        // Função assíncrona para atualizar o contador na interface
+        async function atualizarInterface() {
+            try {
+                const contador = await obterContador();
+                console.log('Contador de viagens:', contador);
+                // Você pode atualizar a interface com o contador aqui se necessário
+            } catch (error) {
+                console.error('Erro ao atualizar a interface:', error);
+            }
+        }
+
         // Renderiza as carretas
         carretas.forEach(carretaId => {
             const carretaDiv = document.createElement('div');
@@ -222,29 +245,28 @@
             carretasContainer.appendChild(carretaDiv);
         });
 
-        carretasContainer.addEventListener('click', (e) => {
-    const button = e.target;
-    const carretaId = button.dataset.id;
+        carretasContainer.addEventListener('click', async (e) => {
+            const button = e.target;
+            const carretaId = button.dataset.id;
 
-    if (button.classList.contains('entrada') || button.classList.contains('saida')) {
-        const hora = new Date().toLocaleString();
-        historico[carretaId] = historico[carretaId] || [];
-        historico[carretaId].push(`${button.classList.contains('entrada') ? 'Entrada' : 'Saída'}: ${hora}`);
-        salvarHistorico();
-        atualizarHistorico(carretaId);
-        enviarEvento(button.classList.contains('entrada') ? 'entrada-carregamento' : 'saida-carregamento', carretaId, hora);
+            if (button.classList.contains('entrada') || button.classList.contains('saida')) {
+                const hora = new Date().toLocaleString();
+                historico[carretaId] = historico[carretaId] || [];
+                historico[carretaId].push(`${button.classList.contains('entrada') ? 'Entrada' : 'Saída'}: ${hora}`);
+                salvarHistorico();
+                atualizarHistorico(carretaId);
+                enviarEvento(button.classList.contains('entrada') ? 'entrada-carregamento' : 'saida-carregamento', carretaId, hora);
 
-        // Alteração: Apenas o botão "Saída" deve enviar o incremento de viagem
-        if (button.classList.contains('saida')) {
-            enviarIncrementoViagem(); // Incrementa o contador de viagens no servidor
-        }
-    }
+                // Alteração: Apenas o botão "Saída" deve enviar o incremento de viagem
+                if (button.classList.contains('saida')) {
+                    await enviarIncrementoViagem();  // Agora usa await para garantir a chamada correta
+                }
+            }
 
-    if (button.classList.contains('limpar')) {
-        mostrarModal(carretaId);
-    }
-});
-
+            if (button.classList.contains('limpar')) {
+                mostrarModal(carretaId);
+            }
+        });
 
         // Função para mostrar o modal
         function mostrarModal(carretaId) {
@@ -292,9 +314,13 @@
             ws.send(JSON.stringify({ tipo, carretaId, hora }));
         }
 
-        // Enviar incremento de viagem ao servidor
-        function enviarIncrementoViagem() {
-            ws.send(JSON.stringify({ tipo: 'incrementar-viagem' }));
+        // Função assíncrona para enviar incremento de viagem ao servidor
+        async function enviarIncrementoViagem() {
+            try {
+                await ws.send(JSON.stringify({ tipo: 'incrementar-viagem' }));
+            } catch (error) {
+                console.error("Erro ao enviar incremento de viagem:", error);
+            }
         }
 
         // Recebe mensagens do WebSocket
