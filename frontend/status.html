@@ -184,6 +184,8 @@
         const localStorageKey = 'status-carretas';
         const carretasStatusContainer = document.getElementById('carretas-status-container');
 
+
+        
         // Inicializa o status salvo ou cria um padrão
         const statusCarretas = JSON.parse(localStorage.getItem(localStorageKey)) || {};
         carretas.forEach(carretaId => {
