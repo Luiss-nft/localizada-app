@@ -1,0 +1,199 @@
+  /* Definindo a paleta de cores */
+/* Definindo a paleta de cores */
+:root {
+    --primary-color: #007BFF; /* Azul vibrante */
+    --secondary-color: #e3f2fd; /* Azul muito claro */
+    --button-bg: #007BFF; /* Azul para os botões */
+    --button-hover-bg: #0056b3; /* Azul mais escuro no hover */
+    --button-active-bg: #004085; /* Azul escuro ao pressionar */
+    --text-color: #333;
+    --shadow-color: rgba(0, 0, 0, 0.1);
+    --border-radius: 8px;
+    --font-family: 'Roboto', sans-serif;
+    --spacing: 16px;
+    --heading-font-size: 2rem;
+    --button-font-size: 1rem;
+    --button-padding: 14px;
+    --light-blue: #b3cde0; /* Azul suave para detalhes */
+    --dark-blue: #004d7a; /* Azul mais escuro para contrastes */
+  }
+  
+  
+  
+      /* Resetando estilos */
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+  
+      body {
+        font-family: var(--font-family);
+        background-color: #e8f5e9; /* Cor de fundo verde suave */
+        color: var(--text-color);
+        margin: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        flex-direction: column;
+        text-align: center;
+      }
+  
+      h1 {
+    font-size: var(--heading-font-size);
+    color: var(--primary-color);
+    font-weight: 700;
+    margin-bottom: 32px;
+    letter-spacing: 1px;
+  }
+      #carretas {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 20px;
+        max-width: 1200px;
+        width: 100%;
+      }
+  
+      .carreta {
+        background-color: white;
+        padding: var(--spacing);
+        border-radius: var(--border-radius);
+        box-shadow: 0 6px 12px var(--shadow-color);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+      }
+  
+      .carreta:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 12px 24px var(--shadow-color);
+      }
+  
+      .carreta h2 {
+        font-size: 1.6rem;
+        color: var(--primary-color);
+        font-weight: 600;
+        margin-bottom: 20px;
+      }
+  
+      /* Estilo para os botões em linha */
+      .buttons-container {
+        display: flex;
+        flex-direction: row; /* Tornar os botões horizontais */
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 12px;
+        width: 250px;
+        height: 50px;
+      }
+  
+      button {
+        background-color: var(--button-bg);
+        color: white;
+        border: none;
+        padding: var(--button-padding);
+        font-size: var(--button-font-size);
+        cursor: pointer;
+        border-radius: var(--border-radius);
+        width: 48%; /* Ajusta para ficar lado a lado com o outro */
+        transition: background-color 0.3s ease, transform 0.3s ease;
+        font-weight: 600;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+  
+      button:hover {
+        background-color: var(--button-hover-bg);
+        transform: scale(1.05);
+      }
+  
+      button:active {
+        background-color: var(--button-active-bg);
+      }
+  
+      .clear-button {
+    background-color: transparent; /* Fundo transparente para a lixeira */
+    width: 48%;
+    font-size: 1.2rem;
+    color: red; /* Cor do ícone de lixeira */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 12px;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+    
+  }
+  
+      .clear-button:hover {
+        transform: scale(1.05);
+      }
+  
+      .clear-button:active {
+        color: #c62828;
+      }
+  
+      .clear-button i {
+        font-size: 1.5rem; /* Tamanho do ícone */
+      }
+  
+      .historico {
+        margin-top: 16px;
+        font-size: 0.9rem;
+        color: #666;
+        background-color: #f8f8f8;
+        padding: 12px;
+        border-radius: var(--border-radius);
+        max-height: 160px;
+        overflow-y: auto;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 8px var(--shadow-color);
+      }
+  
+      .historico p {
+        margin: 8px 0;
+        line-height: 1.6;
+      }
+  
+      .historico p strong {
+        color: var(--primary-color);
+      }
+  
+      /* Estilos para telas pequenas */
+      @media (max-width: 768px) {
+        body {
+          padding: 20px;
+        }
+  
+        .carreta {
+          padding: 16px;
+        }
+  
+        h1 {
+          font-size: 1.8rem;
+        }
+  
+        button {
+          font-size: 0.9rem;
+          width: 100%;
+        }
+  
+        .buttons-container {
+          gap: 8px;
+        }
+  
+       
+    .clear-button {
+      width: 10%; /* Lixeira também ocupa a largura total em telas pequenas */
+      margin-left: 280px;
+      box-shadow: none;
+      margin-top: -60px;
+    }
+      }
+
+      

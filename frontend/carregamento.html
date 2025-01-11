@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carregamento</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<style>
+
+    body {
+        font-family: 'Poppins', sans-serif; /* Alterado para Poppins */
+        margin: 0;
+        padding: 0;
+        background: linear-gradient(135deg, #4caf50, #81c784);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+            
+            .container {
+                max-width: 600px;
+                margin: 2px auto;
+                padding: 20px;
+                background: #e8ecea;
+                border-radius: 3px;
+                box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
+    
+            }
+            h1 {
+                text-align: center;
+                color: #078603;
+                margin-bottom: 20px;
+                font-weight: 700;
+            }
+            .carreta {
+                margin-bottom: 20px;
+                padding: 15px;
+                border: 1px solid #ddd;
+                border-radius: 10px;
+                background: #f9f9f9;
+                transition: transform 0.2s, box-shadow 0.2s;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            }
+            .carreta:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+            }
+            .carreta h2 {
+                margin: 0 0 10px 0;
+                color: #388e3c; /* Verde mais escuro */
+            }
+            .buttons {
+                display: flex;
+                gap: 10px;
+                justify-content: center; /* Centraliza os botões */
+            }
+            button {
+                padding: 10px 15px;
+                border: none;
+                border-radius: 5px;
+                cursor: pointer;
+                transition: background-color 0.3s, transform 0.2s;
+                font-weight: 500;
+                flex: 1; /* Faz os botões ocuparem espaço igual */
+                margin: 0 5px; /* Margem entre os botões */
+            }
+            button.entrada {
+                background: #01924a; /* Verde claro */
+                color: white;
+            }
+            button.entrada:hover {
+                background: #57a65a; /* Verde mais escuro ao passar o mouse */
+                transform: translateY(-1px);
+            }
+            button.saida {
+                background: #01924a; /* Vermelho claro */
+                color: white;
+            }
+            button.saida:hover {
+                background:#57a65a; /* Vermelho mais escuro ao passar o mouse */
+                transform: translateY(-1px);
+            }
+            button.limpar {
+                background: #dddddd; /* Laranja */
+                color: rgb(0, 0, 0);
+            }
+            button.limpar:hover {
+                background: #fb8c00; /* Laranja mais escuro ao passar o mouse */
+                transform: translateY(-1px);
+            }
+            .historico {
+                margin-top: 10px;
+                padding: 10px;
+                background: #eef;
+                border-radius: 5px;
+                max-height: 150px;
+                overflow-y: auto;
+            }
+            .historico:hover {
+                background: #e0e0ff;
+            }
+            /* Estilos do Modal */
+            .modal {
+                display: none; /* Oculto por padrão */
+                position: fixed; /* Fixo na tela */
+                z-index: 1; /* Em cima de outros elementos */
+                left: 0;
+                top: 0;
+                width: 100%; /* Largura total */
+                height: 100%; /* Altura total */
+                overflow: auto; /* Habilita rolagem se necessário */
+                background-color: rgba(0,0,0,0.5); /* Fundo preto com opacidade */
+            }
+            .modal-content {
+                background-color: #ffffff; /* Fundo branco */
+                margin: 10% auto; /* 10% do topo e centralizado */
+                padding: 20px;
+                border: 1px solid #e7e7e7;
+                width: 80%; /* Largura do modal */
+                max-width: 400px; /* Largura máxima */
+                border-radius: 15px; /* Bordas arredondadas */
+                box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
+            }
+            .modal h2 {
+                color: #388e3c; /* Verde mais escuro para o título */
+                text-align: center;
+            }
+            .modal p {
+                text-align: center;
+                margin: 10px 0;
+            }
+            .modal input[type="password"] {
+                width: 90%;
+                padding: 10px;
+                margin: 10px 0;
+                border: 1px solid #ddd;
+                border-radius: 5px;
+                font-size: 16px;
+                margin-left: 10px;
+            }
+            .modal button {
+                background: #66bb6a; /* Verde claro */
+                color: white;
+                width: 90%;
+                margin-top: 10px;
+                margin-left: 20px;
+            }
+            .modal button:hover {
+                background: #ffffff; /* Verde mais escuro ao passar o mouse */
+            }
+            .entrada {
+                color: #0a8811; /* Cor verde para a entrada */
+            }
+            .saida {
+                color: #a30907; /* Cor vermelha para a saída */
+            }
+            .close {
+                color: #aaa;
+                float: right;
+                font-size: 28px;
+                font-weight: bold;
+            }
+            .close:hover,
+            .close:focus {
+                color: black;
+                text-decoration: none;
+                cursor: pointer;
+            }
+        </style>
+<body>
+    <div class="container">
+        <h1 id="page-title">Carregamento</h1>
+        <div id="carretas-container"></div>
+    </div>
+
+    <!-- Modal -->
+    <div id="myModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Confirmação</h2>
+            <p>Digite a senha para limpar o histórico:</p>
+            <input type="password" id="senha" placeholder="Senha" />
+            <button id="confirmarLimpar">Confirmar</button>
+        </div>
+    </div>
+
+    <script>
+        const pageType = "Carregamento";
+        const carretas = [1401, 1402, 1417, 1418, 156009];
+        const localStorageKey = pageType.toLowerCase();
+        const carretasContainer = document.getElementById('carretas-container');
+
+        // WebSocket para comunicação em tempo real
+        const ws = new WebSocket('ws://localhost:8080');
+
+        // Inicializa o histórico salvo
+        const historico = JSON.parse(localStorage.getItem(localStorageKey) || '{}');
+
+        // Função para salvar no localStorage
+        function salvarHistorico() {
+            localStorage.setItem(localStorageKey, JSON.stringify(historico));
+        }
+
+        // Renderiza as carretas
+        carretas.forEach(carretaId => {
+            const carretaDiv = document.createElement('div');
+            carretaDiv.className = 'carreta';
+            carretaDiv.innerHTML = `
+                <h2>Carreta ${carretaId}</h2>
+                <div class="buttons">
+                    <button class="entrada" data-id="${carretaId}">Entrada</button>
+                    <button class="saida" data-id="${carretaId}">Saída</button>
+                    <button class="limpar" data-id="${carretaId}">Limpar Histórico</button>
+                </div>
+                <div class="historico" id="historico-${carretaId}">
+                    ${historico[carretaId]?.map(entry => entry.replace(/Entrada:/g, '<span class="entrada">Entrada:</span>').replace(/Saída:/g, '<span class="saida">Saída:</span>')).join('<br>') || 'Sem histórico'}
+                </div>
+            `;
+            carretasContainer.appendChild(carretaDiv);
+        });
+
+        carretasContainer.addEventListener('click', (e) => {
+    const button = e.target;
+    const carretaId = button.dataset.id;
+
+    if (button.classList.contains('entrada') || button.classList.contains('saida')) {
+        const hora = new Date().toLocaleString();
+        historico[carretaId] = historico[carretaId] || [];
+        historico[carretaId].push(`${button.classList.contains('entrada') ? 'Entrada' : 'Saída'}: ${hora}`);
+        salvarHistorico();
+        atualizarHistorico(carretaId);
+        enviarEvento(button.classList.contains('entrada') ? 'entrada-carregamento' : 'saida-carregamento', carretaId, hora);
+
+        // Alteração: Apenas o botão "Saída" deve enviar o incremento de viagem
+        if (button.classList.contains('saida')) {
+            enviarIncrementoViagem(); // Incrementa o contador de viagens no servidor
+        }
+    }
+
+    if (button.classList.contains('limpar')) {
+        mostrarModal(carretaId);
+    }
+});
+
+
+        // Função para mostrar o modal
+        function mostrarModal(carretaId) {
+            const modal = document.getElementById("myModal");
+            modal.style.display = "block";
+
+            // Evento para confirmar a limpeza do histórico
+            document.getElementById("confirmarLimpar").onclick = function() {
+                const senha = document.getElementById("senha").value;
+                if (senha === "123") { // Substitua "suaSenhaSegura" pela senha desejada
+                    historico[carretaId] = [];
+                    salvarHistorico();
+                    atualizarHistorico(carretaId);
+                    enviarEvento('limpar-historico', carretaId);
+                    modal.style.display = "none"; // Fecha o modal após confirmar
+                } else {
+                    alert("Senha incorreta!");
+                }
+            };
+        }
+
+        // Fecha o modal quando o usuário clica no 'x'
+        const span = document.getElementsByClassName("close")[0];
+        span.onclick = function() {
+            const modal = document.getElementById("myModal");
+            modal.style.display = "none";
+        }
+
+        // Fecha o modal quando o usuário clica fora do conteúdo do modal
+        window.onclick = function(event) {
+            const modal = document.getElementById("myModal");
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        }
+
+        // Atualiza o histórico na tela
+        function atualizarHistorico(carretaId) {
+            const historicoDiv = document.getElementById(`historico-${carretaId}`);
+            historicoDiv.innerHTML = historico[carretaId]?.map(entry => entry.replace(/Entrada:/g, '<span class="entrada">Entrada:</span>').replace(/Saída:/g, '<span class="saida">Saída:</span>')).join('<br>') || 'Sem histórico';
+        }
+
+        // Envia eventos ao WebSocket para sincronização
+        function enviarEvento(tipo, carretaId, hora = '') {
+            ws.send(JSON.stringify({ tipo, carretaId, hora }));
+        }
+
+        // Enviar incremento de viagem ao servidor
+        function enviarIncrementoViagem() {
+            ws.send(JSON.stringify({ tipo: 'incrementar-viagem' }));
+        }
+
+        // Recebe mensagens do WebSocket
+        ws.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            const { tipo, carretaId, hora } = data;
+
+            if (tipo === 'entrada-carregamento') {
+                historico[carretaId] = historico[carretaId] || [];
+                historico[carretaId].push(`Entrada: ${hora}`);
+                salvarHistorico();
+                atualizarHistorico(carretaId);
+            }
+
+            if (tipo === 'saida-carregamento') {
+                historico[carretaId] = historico[carretaId] || [];
+                historico[carretaId].push(`Saída: ${hora}`);
+                salvarHistorico();
+                atualizarHistorico(carretaId);
+            }
+
+            if (tipo === 'limpar-historico') {
+                historico[carretaId] = [];
+                salvarHistorico();
+                atualizarHistorico(carretaId);
+            }
+
+            if (tipo === 'contador-viagens') {
+                // Aqui o contador de viagens pode ser exibido na interface se necessário
+                console.log("Contador de viagens atualizado:", data.contador);
+            }
+        };
+    </script>
+</body>
+</html>

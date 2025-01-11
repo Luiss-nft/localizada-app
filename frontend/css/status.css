@@ -1,0 +1,125 @@
+   /* Reset CSS */
+   * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: 'Arial', sans-serif;
+    background-color: #f9fafa;
+    color: #fff; /* Mudança para fonte branca */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 0;
+  }
+
+  /* Barra de navegação */
+  nav {
+    width: 100%;
+    background-color: #0077b6;
+    padding: 10px;
+    display: flex;
+    justify-content: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    justify-content: center;
+    align-items: center;
+  }
+
+  nav h1 {
+    color: #fff;
+    font-size: 1.8rem;
+    margin-top: 10px;
+    
+  }
+
+  /* Container principal */
+  main {
+    padding: 20px;
+    width: 100%;
+    max-width: 1200px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  #statuses {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+    width: 100%;
+  }
+
+  .status-box {
+    background: #fff;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .status-box:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+  }
+
+  .status-box h2 {
+    font-size: 1.2rem;
+    color: #0077b6;
+    margin-bottom: 15px;
+    text-align: center;
+  }
+
+  .status {
+    font-size: 1rem;
+    font-weight: bold;
+    padding: 10px 15px;
+    border-radius: 8px;
+    text-align: center;
+    width: 100%;
+    max-width: 200px;
+  }
+
+  
+h1 {
+font-size: var(--heading-font-size);
+color: var(--primary-color);
+font-weight: 700;
+margin-bottom: 32px;
+letter-spacing: 1px;
+}
+
+
+  /* Variáveis CSS para cores dos status */
+  :root {
+    --color-AguardandoCarregamento: #ffcc00; /* Amarelo */
+    --color-EmPercursoCampo: #079f25; /* Azul */
+    --color-EmPercursoPoco: #cc0000; /* Azul claro diferente */
+    --color-AguardandoDescarregamento: #ff6600; /* Laranja */
+    --color-CaminhoparaPoco: #28a745; /* Verde */
+    --color-SemStatus: #0389ff; /* Cinza */
+    --color-Concluido: #17a2b8; /* Ciano */
+    --color-Cancelado: #dc3545; /* Vermelho */
+  }
+
+  /* Cores dos status */
+  .AguardandoCarregamento { background-color: var(--color-AguardandoCarregamento); }
+  .EmPercursoCampo { background-color: var(--color-EmPercursoCampo); }
+  .EmPercursoPoco { background-color: var(--color-EmPercursoPoco); }
+  .AguardandoDescarregamento { background-color: var(--color-AguardandoDescarregamento); }
+  .CaminhoparaPoco { background-color: var(--color-CaminhoparaPoco); }
+  .SemStatus { background-color: var(--color-SemStatus); }
+  .Concluido { background-color: var(--color-Concluido); }
+  .Cancelado { background-color: var(--color-Cancelado); }
+
+  /* Responsividade */
+  @media (max-width: 768px) {
+    nav h1 {
+      font-size: 1.4rem;
+    }
+  }

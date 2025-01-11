@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Status de Carreta</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        h1 {
+    color: #007bff; /* Azul mais vibrante */
+}
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f8f9fa;
+            color: #088a5e;
+            font-family: 'Arial', sans-serif; /* Mudança de fonte */
+            background-color: #e9ecef; /* Cor de fundo mais suave */
+        }
+        .container {
+            max-width: 1000px;
+            margin: 50px auto;
+            padding: 30px;
+            background-color: #e9fcf1;
+            border-radius: 12px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            font-size: 2rem;
+            color: #495057;
+            margin-bottom: 30px;
+        }
+        .carreta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            background: #f9f9f9;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .carreta:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+        }
+        .carreta h2 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #004f9e;
+        }
+        .status {
+    font-weight: 600;
+    padding: 8px 16px;
+    border-radius: 20px;
+    text-transform: uppercase;
+    font-size: 0.875rem;
+    letter-spacing: 1px;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center; /* Centraliza horizontalmente */
+}
+.status {
+    font-weight: 500;
+    padding: 8px;
+    border-radius: 5px;
+    text-transform: uppercase;
+    font-size: 0.8rem; /* Reduzido para caber em duas linhas */
+    letter-spacing: 0.5px; /* Ajustado para evitar quebras */
+    line-height: 1.2; /* Espaço entre as linhas */
+    transition: background-color 0.3s ease, color 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center; /* Centraliza texto */
+    height: 40px; /* Define altura fixa */
+    width: 120px; /* Define largura suficiente */
+    overflow: hidden; /* Evita transbordamento */
+    
+}
+
+.status-em-percurso-campo,
+.status-em-percurso-poco {
+    background-color: #3498db; /* Azul */
+    color: #fff;
+}
+
+
+.status-aguardando-carregamento,
+.status-em-percurso-campo,
+.status-aguardando-descarregamento,
+.status-em-percurso-poco {
+    width: 115px;
+    height: 40px;
+    text-align: center;
+    font-size: 10px; /* Ajuste conforme necessário */
+    background-color: #f1c40f; /* Substituir conforme a classe */
+    color: #fff;
+    display: flex; /* Define como flex para centralizar */
+    align-items: center; /* Centraliza verticalmente */
+    justify-content: center; /* Centraliza horizontalmente */
+    margin-left: 30px;
+}
+
+        .status-aguardando-carregamento {
+            background-color: #d5e215;
+            color: #fff;
+            width: 1150PX;
+            height: 40PX;
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            font-size: 10PX;
+        }
+        .status-em-percurso-campo {
+            background-color: #2ecc71;
+            color: #fff;
+            width: 1150PX;
+            height: 40PX;
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            font-size: 10PX;
+        }
+        .status-aguardando-descarregamento {
+            background-color: #e74c3c;
+            color: #fff;
+            width: 1150PX;
+            height: 40PX;
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            font-size: 8PX;
+        }
+        .status-em-percurso-poco {
+            background-color: #3498db;
+            color: #fff;
+            width: 1150PX;
+            height: 40PX;
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            font-size: 10PX;
+        }
+        .reset-button {
+            background-color: #e0e0e0;
+            border: none;
+            color: #495057;
+            
+            font-size: 0.875rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin-left: 30px;
+        }
+        .reset-button:hover {
+            background-color: #d3d3d3;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+            h1 {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Status de Carreta</h1>
+        <div id="carretas-status-container"></div>
+    </div>
+
+    <script>
+        const carretas = [1401, 1402, 1417, 1418, 156009];
+        const localStorageKey = 'status-carretas';
+        const carretasStatusContainer = document.getElementById('carretas-status-container');
+
+        // Inicializa o status salvo ou cria um padrão
+        const statusCarretas = JSON.parse(localStorage.getItem(localStorageKey)) || {};
+        carretas.forEach(carretaId => {
+            if (!statusCarretas[carretaId]) {
+                statusCarretas[carretaId] = 'Sem status'; // Status padrão
+            }
+        });
+
+        // Salva o status no localStorage
+        function salvarStatus() {
+            localStorage.setItem(localStorageKey, JSON.stringify(statusCarretas));
+        }
+
+        // Função para determinar a classe de cor baseada no status
+        function getStatusClass(status) {
+            switch(status) {
+                case 'Aguardando Carregamento':
+                    return 'status-aguardando-carregamento';
+                case 'Em Percurso para Campo':
+                    return 'status-em-percurso-campo';
+                case 'Aguardando Descarregamento':
+                    return 'status-aguardando-descarregamento';
+                case 'Em Percurso para Poço':
+                    return 'status-em-percurso-poco';
+                default:
+                    return '';
+            }
+        }
+
+        // Função para resetar o status da carreta para "Sem status"
+        function resetarStatus(carretaId) {
+            statusCarretas[carretaId] = 'Sem status';
+            salvarStatus();
+            renderizarStatus();
+        }
+
+        // Renderiza o status das carretas
+        function renderizarStatus() {
+            carretasStatusContainer.innerHTML = '';
+            carretas.forEach(carretaId => {
+                const carretaDiv = document.createElement('div');
+                carretaDiv.className = 'carreta';
+                const status = statusCarretas[carretaId];
+                const statusClass = getStatusClass(status);
+                carretaDiv.innerHTML = `
+                    <h2>Carreta ${carretaId}</h2>
+                    <span class="status ${statusClass}" id="status-${carretaId}">${status}</span>
+                    <button class="reset-button" onclick="resetarStatus(${carretaId})">Resetar </button>
+                `;
+                carretasStatusContainer.appendChild(carretaDiv);
+            });
+        }
+
+        // WebSocket para comunicação em tempo real
+        const ws = new WebSocket('ws://localhost:8080');
+
+        ws.onmessage = (event) => {
+            const { tipo, carretaId } = JSON.parse(event.data);
+
+            // Atualiza o status com base no evento recebido
+            if (tipo === 'entrada-carregamento') {
+                statusCarretas[carretaId] = 'Aguardando Carregamento';
+            } else if (tipo === 'saida-carregamento') {
+                statusCarretas[carretaId] = 'Em Percurso para Campo';
+            } else if (tipo === 'entrada-descarregamento') {
+                statusCarretas[carretaId] = 'Aguardando Descarregamento';
+            } else if (tipo === 'saida-descarregamento') {
+                statusCarretas[carretaId] = 'Em Percurso para Poço';
+            }
+
+            salvarStatus();
+            renderizarStatus();
+        };
+
+        // Renderiza ao carregar a página
+        renderizarStatus();
+    </script>
+</body>
+</html>

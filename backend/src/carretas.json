@@ -1,0 +1,19 @@
+{
+  "1401": "Em Percurso",
+  "1402": {
+    "historico": [
+      {
+        "status": "Aguardando Desco",
+        "hora": "23:00:16"
+      },
+      {
+        "status": "Em Percurso",
+        "hora": "11:00:20 PM"
+      },
+      {
+        "status": "Aguardando Carregamento",
+        "hora": "11:00:21 PM"
+      }
+    ]
+  }
+}
