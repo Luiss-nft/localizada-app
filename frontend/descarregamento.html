@@ -197,7 +197,7 @@
         const carretasContainer = document.getElementById('carretas-container');
 
         // WebSocket para comunicação em tempo real
-        const ws = new WebSocket('ws://localhost:8080');
+        const ws = new WebSocket('wss://localizada-app.onrender.com');
 
         // Inicializa o histórico salvo
         const historico = JSON.parse(localStorage.getItem(localStorageKey) || '{}');

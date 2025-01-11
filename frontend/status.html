@@ -238,7 +238,7 @@
         }
 
         // WebSocket para comunicação em tempo real
-        const ws = new WebSocket('ws://localhost:8080');
+        const ws = new WebSocket('wss://localizada-app.onrender.com');
 
         ws.onmessage = (event) => {
             const { tipo, carretaId } = JSON.parse(event.data);
