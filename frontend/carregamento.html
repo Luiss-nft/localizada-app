@@ -191,14 +191,14 @@
         const pageType = "Carregamento";
         const carretas = [1401, 1402, 1417, 1418, 156009];
         const carretasContainer = document.getElementById('carretas-container');
-
+    
         // WebSocket para comunicação em tempo real
-        const ws = new WebSocket('ws://localhost:8080');
-
+        const ws = new WebSocket('wss://localizada-app.onrender.com');
+    
         // Função para renderizar as carretas
         function renderCarretas() {
             carretasContainer.innerHTML = ''; // Limpa o container
-
+    
             carretas.forEach(carretaId => {
                 const carretaDiv = document.createElement('div');
                 carretaDiv.className = 'carreta';
@@ -216,19 +216,19 @@
                 carretasContainer.appendChild(carretaDiv);
             });
         }
-
+    
         // Inicializa a interface
         renderCarretas();
-
+    
         // Carrega o histórico do servidor ao conectar
         ws.onopen = () => {
             ws.send(JSON.stringify({ tipo: 'carregar-historico' }));
         };
-
+    
         // Recebe mensagens do WebSocket
         ws.onmessage = (event) => {
             const data = JSON.parse(event.data);
-
+    
             if (data.tipo === 'atualizar-historico') {
                 atualizarHistorico(data.carretaId, data.historico);
             } else if (data.tipo === 'carregar-historico') {
@@ -238,32 +238,35 @@
                 });
             }
         };
-
+    
         // Adiciona eventos aos botões
         carretasContainer.addEventListener('click', (e) => {
             const button = e.target;
             const carretaId = button.dataset.id;
-
+    
             if (button.classList.contains('entrada')) {
                 const hora = new Date().toLocaleString();
                 enviarEvento('entrada-carregamento', carretaId, hora);
             }
-
+    
             if (button.classList.contains('saida')) {
                 const hora = new Date().toLocaleString();
                 enviarEvento('saida-carregamento', carretaId, hora);
+    
+                // Incrementa o contador de viagens na página inicial
+                ws.send(JSON.stringify({ tipo: 'incrementar-viagem' }));  // Envia o incremento de viagem para o servidor
             }
-
+    
             if (button.classList.contains('limpar')) {
                 mostrarModal(carretaId);
             }
         });
-
+    
         // Função para mostrar o modal
         function mostrarModal(carretaId) {
             const modal = document.getElementById("myModal");
             modal.style.display = "block";
-
+    
             // Evento para confirmar a limpeza do histórico
             document.getElementById("confirmarLimpar").onclick = function() {
                 const senha = document.getElementById("senha").value;
@@ -275,14 +278,14 @@
                 }
             };
         }
-
+    
         // Fecha o modal quando o usuário clica no 'x'
         const span = document.getElementsByClassName("close")[0];
         span.onclick = function() {
             const modal = document.getElementById("myModal");
             modal.style.display = "none";
         }
-
+    
         // Fecha o modal quando o usuário clica fora do conteúdo do modal
         window.onclick = function(event) {
             const modal = document.getElementById("myModal");
@@ -290,23 +293,21 @@
                 modal.style.display = "none";
             }
         }
-
+    
         // Atualiza o histórico na tela
         function atualizarHistorico(carretaId, historico) {
             const historicoDiv = document.getElementById(`historico-${carretaId}`);
             historicoDiv.innerHTML = historico.map(entry => entry.replace(/Entrada:/g, '<span class="entrada">Entrada:</span>').replace(/Saída:/g, '<span class="saida">Saída:</span>')).join('<br>') || 'Sem histórico';
         }
-
+    
         // Envia eventos ao WebSocket para sincronização
         function enviarEvento(tipo, carretaId, hora = '') {
             ws.send(JSON.stringify({ tipo, carretaId, hora }));
         }
     </script>
-</body>
-</html>
+    
 
 </body>
 </html>
 
-</body>
-</html>
+

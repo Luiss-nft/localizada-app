@@ -106,6 +106,14 @@
     // WebSocket para comunicação em tempo real
     const ws = new WebSocket('wss://localizada-app.onrender.com'); // Troque 'localhost' pela URL do seu servidor online
 
+    // Função para atualizar o contador de viagens na interface
+    function updateViagensCounter(newCount) {
+        const counterElement = document.getElementById('viagensCounter');
+        if (counterElement) {
+            counterElement.textContent = newCount;
+        }
+    }
+
     // Inicializar o contador com o valor salvo no localStorage
     const viagensInicial = parseInt(localStorage.getItem('contadorViagens')) || 0;
     updateViagensCounter(viagensInicial);
@@ -117,14 +125,6 @@
             updateViagensCounter(data.contador);
         }
     };
-
-    // Função para atualizar o contador de viagens na interface
-    function updateViagensCounter(newCount) {
-        const counterElement = document.getElementById('viagensCounter');
-        if (counterElement) {
-            counterElement.textContent = newCount;
-        }
-    }
 
     // Incrementar contador ao clicar no botão "Adicionar Viagem"
     document.getElementById('incrementarViagemBtn').addEventListener('click', () => {
@@ -153,7 +153,8 @@
     document.getElementById('naoBtn').addEventListener('click', () => {
         document.getElementById('modal').style.display = 'none'; // Fecha o modal
     });
-  </script>
+</script>
+
 </body>
 
 </html>
