@@ -190,77 +190,68 @@
     <script>
         const pageType = "Carregamento";
         const carretas = [1401, 1402, 1417, 1418, 156009];
-        const localStorageKey = pageType.toLowerCase();
         const carretasContainer = document.getElementById('carretas-container');
 
         // WebSocket para comunicação em tempo real
-        const ws = new WebSocket('wss://localizada-app.onrender.com');
+        const ws = new WebSocket('ws://localhost:8080');
 
-        // Inicializa o histórico salvo
-        const historico = JSON.parse(localStorage.getItem(localStorageKey) || '{}');
+        // Função para renderizar as carretas
+        function renderCarretas() {
+            carretasContainer.innerHTML = ''; // Limpa o container
 
-        // Função para salvar no localStorage
-        function salvarHistorico() {
-            localStorage.setItem(localStorageKey, JSON.stringify(historico));
+            carretas.forEach(carretaId => {
+                const carretaDiv = document.createElement('div');
+                carretaDiv.className = 'carreta';
+                carretaDiv.innerHTML = `
+                    <h2>Carreta ${carretaId}</h2>
+                    <div class="buttons">
+                        <button class="entrada" data-id="${carretaId}">Entrada</button>
+                        <button class="saida" data-id="${carretaId}">Saída</button>
+                        <button class="limpar" data-id="${carretaId}">Limpar Histórico</button>
+                    </div>
+                    <div class="historico" id="historico-${carretaId}">
+                        Sem histórico
+                    </div>
+                `;
+                carretasContainer.appendChild(carretaDiv);
+            });
         }
 
-        // Função assíncrona para obter o contador de viagens do servidor
-        async function obterContador() {
-            try {
-                const response = await fetch('/contador');
-                const data = await response.json();
-                return data.contador;
-            } catch (error) {
-                console.error('Erro ao obter o contador:', error);
-                return 0;  // Retorna 0 caso haja erro
+        // Inicializa a interface
+        renderCarretas();
+
+        // Carrega o histórico do servidor ao conectar
+        ws.onopen = () => {
+            ws.send(JSON.stringify({ tipo: 'carregar-historico' }));
+        };
+
+        // Recebe mensagens do WebSocket
+        ws.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+
+            if (data.tipo === 'atualizar-historico') {
+                atualizarHistorico(data.carretaId, data.historico);
+            } else if (data.tipo === 'carregar-historico') {
+                const historico = data.historico;
+                Object.keys(historico).forEach(carretaId => {
+                    atualizarHistorico(carretaId, historico[carretaId]);
+                });
             }
-        }
+        };
 
-        // Função assíncrona para atualizar o contador na interface
-        async function atualizarInterface() {
-            try {
-                const contador = await obterContador();
-                console.log('Contador de viagens:', contador);
-                // Você pode atualizar a interface com o contador aqui se necessário
-            } catch (error) {
-                console.error('Erro ao atualizar a interface:', error);
-            }
-        }
-
-        // Renderiza as carretas
-        carretas.forEach(carretaId => {
-            const carretaDiv = document.createElement('div');
-            carretaDiv.className = 'carreta';
-            carretaDiv.innerHTML = `
-                <h2>Carreta ${carretaId}</h2>
-                <div class="buttons">
-                    <button class="entrada" data-id="${carretaId}">Entrada</button>
-                    <button class="saida" data-id="${carretaId}">Saída</button>
-                    <button class="limpar" data-id="${carretaId}">Limpar Histórico</button>
-                </div>
-                <div class="historico" id="historico-${carretaId}">
-                    ${historico[carretaId]?.map(entry => entry.replace(/Entrada:/g, '<span class="entrada">Entrada:</span>').replace(/Saída:/g, '<span class="saida">Saída:</span>')).join('<br>') || 'Sem histórico'}
-                </div>
-            `;
-            carretasContainer.appendChild(carretaDiv);
-        });
-
-        carretasContainer.addEventListener('click', async (e) => {
+        // Adiciona eventos aos botões
+        carretasContainer.addEventListener('click', (e) => {
             const button = e.target;
             const carretaId = button.dataset.id;
 
-            if (button.classList.contains('entrada') || button.classList.contains('saida')) {
+            if (button.classList.contains('entrada')) {
                 const hora = new Date().toLocaleString();
-                historico[carretaId] = historico[carretaId] || [];
-                historico[carretaId].push(`${button.classList.contains('entrada') ? 'Entrada' : 'Saída'}: ${hora}`);
-                salvarHistorico();
-                atualizarHistorico(carretaId);
-                enviarEvento(button.classList.contains('entrada') ? 'entrada-carregamento' : 'saida-carregamento', carretaId, hora);
+                enviarEvento('entrada-carregamento', carretaId, hora);
+            }
 
-                // Alteração: Apenas o botão "Saída" deve enviar o incremento de viagem
-                if (button.classList.contains('saida')) {
-                    await enviarIncrementoViagem();  // Agora usa await para garantir a chamada correta
-                }
+            if (button.classList.contains('saida')) {
+                const hora = new Date().toLocaleString();
+                enviarEvento('saida-carregamento', carretaId, hora);
             }
 
             if (button.classList.contains('limpar')) {
@@ -276,10 +267,7 @@
             // Evento para confirmar a limpeza do histórico
             document.getElementById("confirmarLimpar").onclick = function() {
                 const senha = document.getElementById("senha").value;
-                if (senha === "123") { // Substitua "suaSenhaSegura" pela senha desejada
-                    historico[carretaId] = [];
-                    salvarHistorico();
-                    atualizarHistorico(carretaId);
+                if (senha === "123") {
                     enviarEvento('limpar-historico', carretaId);
                     modal.style.display = "none"; // Fecha o modal após confirmar
                 } else {
@@ -304,55 +292,21 @@
         }
 
         // Atualiza o histórico na tela
-        function atualizarHistorico(carretaId) {
+        function atualizarHistorico(carretaId, historico) {
             const historicoDiv = document.getElementById(`historico-${carretaId}`);
-            historicoDiv.innerHTML = historico[carretaId]?.map(entry => entry.replace(/Entrada:/g, '<span class="entrada">Entrada:</span>').replace(/Saída:/g, '<span class="saida">Saída:</span>')).join('<br>') || 'Sem histórico';
+            historicoDiv.innerHTML = historico.map(entry => entry.replace(/Entrada:/g, '<span class="entrada">Entrada:</span>').replace(/Saída:/g, '<span class="saida">Saída:</span>')).join('<br>') || 'Sem histórico';
         }
 
         // Envia eventos ao WebSocket para sincronização
         function enviarEvento(tipo, carretaId, hora = '') {
             ws.send(JSON.stringify({ tipo, carretaId, hora }));
         }
-
-        // Função assíncrona para enviar incremento de viagem ao servidor
-        async function enviarIncrementoViagem() {
-            try {
-                await ws.send(JSON.stringify({ tipo: 'incrementar-viagem' }));
-            } catch (error) {
-                console.error("Erro ao enviar incremento de viagem:", error);
-            }
-        }
-
-        // Recebe mensagens do WebSocket
-        ws.onmessage = (event) => {
-            const data = JSON.parse(event.data);
-            const { tipo, carretaId, hora } = data;
-
-            if (tipo === 'entrada-carregamento') {
-                historico[carretaId] = historico[carretaId] || [];
-                historico[carretaId].push(`Entrada: ${hora}`);
-                salvarHistorico();
-                atualizarHistorico(carretaId);
-            }
-
-            if (tipo === 'saida-carregamento') {
-                historico[carretaId] = historico[carretaId] || [];
-                historico[carretaId].push(`Saída: ${hora}`);
-                salvarHistorico();
-                atualizarHistorico(carretaId);
-            }
-
-            if (tipo === 'limpar-historico') {
-                historico[carretaId] = [];
-                salvarHistorico();
-                atualizarHistorico(carretaId);
-            }
-
-            if (tipo === 'contador-viagens') {
-                // Aqui o contador de viagens pode ser exibido na interface se necessário
-                console.log("Contador de viagens atualizado:", data.contador);
-            }
-        };
     </script>
+</body>
+</html>
+
+</body>
+</html>
+
 </body>
 </html>

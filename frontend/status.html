@@ -11,14 +11,14 @@
             box-sizing: border-box;
         }
         h1 {
-    color: #007bff; /* Azul mais vibrante */
-}
+            color: #007bff;
+        }
         body {
             font-family: 'Roboto', sans-serif;
             background-color: #f8f9fa;
             color: #088a5e;
-            font-family: 'Arial', sans-serif; /* Mudança de fonte */
-            background-color: #e9ecef; /* Cor de fundo mais suave */
+            font-family: 'Arial', sans-serif;
+            background-color: #e9ecef;
         }
         .container {
             max-width: 1000px;
@@ -55,104 +55,74 @@
             color: #004f9e;
         }
         .status {
-    font-weight: 600;
-    padding: 8px 16px;
-    border-radius: 20px;
-    text-transform: uppercase;
-    font-size: 0.875rem;
-    letter-spacing: 1px;
-    transition: background-color 0.3s ease, color 0.3s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center; /* Centraliza horizontalmente */
-}
-.status {
-    font-weight: 500;
-    padding: 8px;
-    border-radius: 5px;
-    text-transform: uppercase;
-    font-size: 0.8rem; /* Reduzido para caber em duas linhas */
-    letter-spacing: 0.5px; /* Ajustado para evitar quebras */
-    line-height: 1.2; /* Espaço entre as linhas */
-    transition: background-color 0.3s ease, color 0.3s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-align: center; /* Centraliza texto */
-    height: 40px; /* Define altura fixa */
-    width: 120px; /* Define largura suficiente */
-    overflow: hidden; /* Evita transbordamento */
-    
-}
-
-.status-em-percurso-campo,
-.status-em-percurso-poco {
-    background-color: #3498db; /* Azul */
-    color: #fff;
-}
-
-
-.status-aguardando-carregamento,
-.status-em-percurso-campo,
-.status-aguardando-descarregamento,
-.status-em-percurso-poco {
-    width: 115px;
-    height: 40px;
-    text-align: center;
-    font-size: 10px; /* Ajuste conforme necessário */
-    background-color: #f1c40f; /* Substituir conforme a classe */
-    color: #fff;
-    display: flex; /* Define como flex para centralizar */
-    align-items: center; /* Centraliza verticalmente */
-    justify-content: center; /* Centraliza horizontalmente */
-    margin-left: 30px;
-}
-
+            font-weight: 600;
+            padding: 8px 16px;
+            border-radius: 20px;
+            text-transform: uppercase;
+            font-size: 0.875rem;
+            letter-spacing: 1px;
+            transition: background-color 0.3s ease, color 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .status {
+            font-weight: 500;
+            padding: 8px;
+            border-radius: 5px;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 0.5px;
+            line-height: 1.2;
+            transition: background-color 0.3s ease, color 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            height: 40px;
+            width: 120px;
+            overflow: hidden;
+        }
+        .status-em-percurso-campo,
+        .status-em-percurso-poco {
+            background-color: #3498db;
+            color: #fff;
+        }
+        .status-aguardando-carregamento,
+        .status-em-percurso-campo,
+        .status-aguardando-descarregamento,
+        .status-em-percurso-poco {
+            width: 115px;
+            height: 40px;
+            text-align: center;
+            font-size: 10px;
+            background-color: #f1c40f;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: 30px;
+        }
         .status-aguardando-carregamento {
             background-color: #d5e215;
             color: #fff;
-            width: 1150PX;
-            height: 40PX;
-            text-align: center;
-            display: flex;
-            justify-content: center;
-            font-size: 10PX;
         }
         .status-em-percurso-campo {
             background-color: #2ecc71;
             color: #fff;
-            width: 1150PX;
-            height: 40PX;
-            text-align: center;
-            display: flex;
-            justify-content: center;
-            font-size: 10PX;
         }
         .status-aguardando-descarregamento {
             background-color: #e74c3c;
             color: #fff;
-            width: 1150PX;
-            height: 40PX;
-            text-align: center;
-            display: flex;
-            justify-content: center;
-            font-size: 8PX;
         }
         .status-em-percurso-poco {
             background-color: #3498db;
             color: #fff;
-            width: 1150PX;
-            height: 40PX;
-            text-align: center;
-            display: flex;
-            justify-content: center;
-            font-size: 10PX;
         }
         .reset-button {
             background-color: #e0e0e0;
             border: none;
             color: #495057;
-            
             font-size: 0.875rem;
             border-radius: 6px;
             cursor: pointer;
@@ -181,27 +151,17 @@
 
     <script>
         const carretas = [1401, 1402, 1417, 1418, 156009];
-        const localStorageKey = 'status-carretas';
         const carretasStatusContainer = document.getElementById('carretas-status-container');
+        let statusCarretas = {
+            1401: 'Aguardando Carregamento',
+            1402: 'Em Percurso para Campo',
+            1417: 'Aguardando Descarregamento',
+            1418: 'Em Percurso para Poço',
+            156009: 'Aguardando Carregamento'
+        };
 
-
-        
-        // Inicializa o status salvo ou cria um padrão
-        const statusCarretas = JSON.parse(localStorage.getItem(localStorageKey)) || {};
-        carretas.forEach(carretaId => {
-            if (!statusCarretas[carretaId]) {
-                statusCarretas[carretaId] = 'Sem status'; // Status padrão
-            }
-        });
-
-        // Salva o status no localStorage
-        function salvarStatus() {
-            localStorage.setItem(localStorageKey, JSON.stringify(statusCarretas));
-        }
-
-        // Função para determinar a classe de cor baseada no status
         function getStatusClass(status) {
-            switch(status) {
+            switch (status) {
                 case 'Aguardando Carregamento':
                     return 'status-aguardando-carregamento';
                 case 'Em Percurso para Campo':
@@ -215,14 +175,13 @@
             }
         }
 
-        // Função para resetar o status da carreta para "Sem status"
         function resetarStatus(carretaId) {
-            statusCarretas[carretaId] = 'Sem status';
-            salvarStatus();
+            const status = 'Sem status';
+            statusCarretas[carretaId] = status;
+            enviarEvento('resetar-status', carretaId, status);
             renderizarStatus();
         }
 
-        // Renderiza o status das carretas
         function renderizarStatus() {
             carretasStatusContainer.innerHTML = '';
             carretas.forEach(carretaId => {
@@ -233,34 +192,34 @@
                 carretaDiv.innerHTML = `
                     <h2>Carreta ${carretaId}</h2>
                     <span class="status ${statusClass}" id="status-${carretaId}">${status}</span>
-                    <button class="reset-button" onclick="resetarStatus(${carretaId})">Resetar </button>
+                    <button class="reset-button" onclick="resetarStatus(${carretaId})">Resetar</button>
                 `;
                 carretasStatusContainer.appendChild(carretaDiv);
             });
         }
 
-        // WebSocket para comunicação em tempo real
-        const ws = new WebSocket('wss://localizada-app.onrender.com');
+        const ws = new WebSocket('ws://localhost:8080');
 
-        ws.onmessage = (event) => {
-            const { tipo, carretaId } = JSON.parse(event.data);
-
-            // Atualiza o status com base no evento recebido
-            if (tipo === 'entrada-carregamento') {
-                statusCarretas[carretaId] = 'Aguardando Carregamento';
-            } else if (tipo === 'saida-carregamento') {
-                statusCarretas[carretaId] = 'Em Percurso para Campo';
-            } else if (tipo === 'entrada-descarregamento') {
-                statusCarretas[carretaId] = 'Aguardando Descarregamento';
-            } else if (tipo === 'saida-descarregamento') {
-                statusCarretas[carretaId] = 'Em Percurso para Poço';
-            }
-
-            salvarStatus();
-            renderizarStatus();
+        ws.onopen = () => {
+            ws.send(JSON.stringify({ tipo: 'carregar-status' }));
         };
 
-        // Renderiza ao carregar a página
+        ws.onmessage = (event) => {
+            const { tipo, carretaId, status } = JSON.parse(event.data);
+
+            if (tipo === 'atualizar-status') {
+                statusCarretas[carretaId] = status;
+                renderizarStatus();
+            } else if (tipo === 'carregar-status') {
+                statusCarretas = status;
+                renderizarStatus();
+            }
+        };
+
+        function enviarEvento(tipo, carretaId, status = '') {
+            ws.send(JSON.stringify({ tipo, carretaId, status }));
+        }
+
         renderizarStatus();
     </script>
 </body>

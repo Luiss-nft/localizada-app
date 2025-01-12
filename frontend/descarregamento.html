@@ -189,141 +189,138 @@
             <button id="confirmarLimpar">Confirmar</button>
         </div>
     </div>
-
     <script>
         const pageType = "Descarregamento";
         const carretas = [1401, 1402, 1417, 1418, 156009];
-        const localStorageKey = pageType.toLowerCase();
         const carretasContainer = document.getElementById('carretas-container');
-
+    
         // WebSocket para comunicação em tempo real
-        const ws = new WebSocket('wss://localizada-app.onrender.com');
-
-        // Inicializa o histórico salvo
-        const historico = JSON.parse(localStorage.getItem(localStorageKey) || '{}');
-
-        // Função para salvar no localStorage
-        function salvarHistorico() {
-            localStorage.setItem(localStorageKey, JSON.stringify(historico));
+        const ws = new WebSocket('Ws://localhost:8080');
+    
+        // Inicializa o histórico
+        let historico = {};
+    
+        // Função para renderizar as carretas
+        function renderizarCarretas() {
+            carretasContainer.innerHTML = ''; // Limpa o container antes de renderizar
+            carretas.forEach(carretaId => {
+                const carretaDiv = document.createElement('div');
+                carretaDiv.className = 'carreta';
+                carretaDiv.innerHTML = `
+                    <h2>Carreta ${carretaId}</h2>
+                    <div class="buttons">
+                        <button class="entrada" data-id="${carretaId}">Entrada</button>
+                        <button class="saida" data-id="${carretaId}">Saída</button>
+                        <button class="limpar" data-id="${carretaId}">Limpar Histórico</button>
+                    </div>
+                    <div class="historico" id="historico-${carretaId}">
+                        ${historico[carretaId]?.join('<br>') || 'Sem histórico'}
+                    </div>
+                `;
+                carretasContainer.appendChild(carretaDiv);
+            });
         }
-
-        // Renderiza as carretas
-        carretas.forEach(carretaId => {
-            const carretaDiv = document.createElement('div');
-            carretaDiv.className = 'carreta';
-            carretaDiv.innerHTML = `
-                <h2>Carreta ${carretaId}</h2>
-                <div class="buttons">
-                    <button class="entrada" data-id="${carretaId}">Entrada</button>
-                    <button class="saida" data-id="${carretaId}">Saída</button>
-                    <button class="limpar" data-id="${carretaId}">Limpar Histórico</button>
-                </div>
-                <div class="historico" id="historico-${carretaId}">
-                    ${historico[carretaId]?.join('<br>') || 'Sem histórico'}
-                </div>
-            `;
-            carretasContainer.appendChild(carretaDiv);
-        });
-
+    
+        // Chama a função para renderizar as carretas na inicialização
+        renderizarCarretas();
+    
         // Adiciona eventos aos botões
         carretasContainer.addEventListener('click', (e) => {
             const button = e.target;
             const carretaId = button.dataset.id;
-
+    
             if (button.classList.contains('entrada')) {
                 const hora = new Date().toLocaleString();
-                historico[carretaId] = historico[carretaId] || [];
-                historico[carretaId].push(`Entrada: ${hora}`);
-                salvarHistorico();
-                atualizarHistorico(carretaId);
                 enviarEvento('entrada-descarregamento', carretaId, hora);
             }
-
+    
             if (button.classList.contains('saida')) {
                 const hora = new Date().toLocaleString();
-                historico[carretaId] = historico[carretaId] || [];
-                historico[carretaId].push(`Saída: ${hora}`);
-                salvarHistorico();
-                atualizarHistorico(carretaId);
                 enviarEvento('saida-descarregamento', carretaId, hora);
             }
-
+    
             if (button.classList.contains('limpar')) {
                 mostrarModal(carretaId);
             }
         });
-
         // Função para mostrar o modal
         function mostrarModal(carretaId) {
-            const modal = document.getElementById("myModal");
-            modal.style.display = "block";
+        const modal = document.getElementById("myModal");
+        modal.style.display = "block";
 
-            // Evento para confirmar a limpeza do histórico
-            document.getElementById("confirmarLimpar").onclick = function() {
-                const senha = document.getElementById("senha").value;
-                if (senha === "123") { // Substitua "suaSenhaSegura" pela senha desejada
-                    historico[carretaId] = [];
-                    salvarHistorico();
-                    atualizarHistorico(carretaId);
-                    enviarEvento('limpar-historico', carretaId);
-                    modal.style.display = "none"; // Fecha o modal após confirmar
-                } else {
-                    alert("Senha incorreta!");
-                }
-            };
-        }
-
-        // Fecha o modal quando o usuário clica no 'x'
-        const span = document.getElementsByClassName("close")[0];
-        span.onclick = function() {
-            const modal = document.getElementById("myModal");
-            modal.style.display = "none";
-        }
-
-        // Fecha o modal quando o usuário clica fora do conteúdo do modal
-        window.onclick = function(event) {
-            const modal = document.getElementById("myModal");
-            if (event.target == modal) {
-                modal.style.display = "none";
-            }
-        }
-
-        // Atualiza o histórico na tela
-        function atualizarHistorico(carretaId) {
-            const historicoDiv = document.getElementById(`historico-${carretaId}`);
-            historicoDiv.innerHTML = historico[carretaId]?.join('<br>') || 'Sem histórico';
-        }
-
-        // Envia eventos ao WebSocket para sincronização
-        function enviarEvento(tipo, carretaId, hora = '') {
-            ws.send(JSON.stringify({ tipo, carretaId, hora }));
-        }
-
-        // Recebe mensagens do WebSocket
-        ws.onmessage = (event) => {
-            const data = JSON.parse(event.data);
-            const { tipo, carretaId, hora } = data;
-
-            if (tipo === 'entrada-descarregamento') {
-                historico[carretaId] = historico[carretaId] || [];
-                historico[carretaId].push(`Entrada: ${hora}`);
-                salvarHistorico();
-                atualizarHistorico(carretaId);
-            }
-
-            if (tipo === 'saida-descarregamento') {
-                historico[carretaId] = historico[carretaId] || [];
-                historico[carretaId].push(`Saída: ${hora}`);
-                salvarHistorico();
-                atualizarHistorico(carretaId);
-            }
-
-            if (tipo === 'limpar-historico') {
-                historico[carretaId] = [];
-                salvarHistorico();
-                atualizarHistorico(carretaId);
+        // Evento para confirmar a limpeza do histórico
+        document.getElementById("confirmarLimpar").onclick = function() {
+            const senha = document.getElementById("senha").value;
+            if (senha === "123") { // Substitua "suaSenhaSegura" pela senha desejada
+                enviarEvento('limpar-historico-descarregamento', carretaId);
+                modal.style.display = "none"; // Fecha o modal após confirmar
+            } else {
+                alert("Senha incorreta!");
             }
         };
-    </script>
+    }
+
+    // Fecha o modal quando o usuário clica no 'x'
+    const span = document.getElementsByClassName("close")[0];
+    span.onclick = function() {
+        const modal = document.getElementById("myModal");
+        modal.style.display = "none";
+    }
+
+    // Fecha o modal quando o usuário clica fora do conteúdo do modal
+    window.onclick = function(event) {
+        const modal = document.getElementById("myModal");
+        if (event.target == modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    // Atualiza o histórico na tela
+    function atualizarHistorico(carretaId) {
+        const historicoDiv = document.getElementById(`historico-${carretaId}`);
+        historicoDiv.innerHTML = historico[carretaId]?.join('<br>') || 'Sem histórico';
+    }
+
+    // Envia eventos ao WebSocket para sincronização
+    function enviarEvento(tipo, carretaId, hora = '') {
+        ws.send(JSON.stringify({ tipo, carretaId, hora }));
+    }
+
+    // Recebe mensagens do WebSocket
+    ws.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        const { tipo, carretaId, hora } = data;
+
+        if (tipo === 'carregar-historico-descarregamento') {
+            historico = data.historico;
+            renderizarCarretas();
+        }
+
+        if (tipo === 'entrada-descarregamento') {
+            historico[carretaId] = historico[carretaId] || [];
+            historico[carretaId].push(`Entrada: ${hora}`);
+            atualizarHistorico(carretaId);
+        }
+
+        if (tipo === 'saida-descarregamento') {
+            historico[carretaId] = historico[carretaId] || [];
+            historico[carretaId].push(`Saída: ${hora}`);
+            atualizarHistorico(carretaId);
+        }
+
+        if (tipo === 'limpar-historico-descarregamento') {
+            historico[carretaId] = [];
+            atualizarHistorico(carretaId);
+        }
+    };
+
+    // Solicita o histórico inicial ao servidor
+    ws.onopen = () => {
+        ws.send(JSON.stringify({ tipo: 'carregar-historico-descarregamento' }));
+    };
+</script>
+
+
+
 </body>
 </html>

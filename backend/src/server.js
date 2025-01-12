@@ -1,139 +1,162 @@
-const express = require('express');
-const { WebSocketServer } = require('ws');
-const fs = require('fs');
-const path = require('path');
-const dotenv = require('dotenv');
+const { WebSocketServer } = require("ws");
+const fs = require("fs");
+const path = require("path");
+const dotenv = require("dotenv");
 
 dotenv.config();
 
-const app = express();
 const wss = new WebSocketServer({ port: process.env.PORT || 8080 });
 
-const contadorFilePath = path.join(__dirname, 'contadorViagem.json');
-const historicoFilePath = path.join(__dirname, 'historico.json');
+const contadorFilePath = path.join(__dirname, "contadorViagem.json");
+const historicoFilePath = path.join(__dirname, "historicoCarretas.json");
+const statusFilePath = path.join(__dirname, "statusCarretas.json");
+const descarregamentoFilePath = path.join(__dirname, "historicoDescarregamento.json");
 
 let contadorViagens = 0;
-let historico = {};
+let historicoCarretas = {};
+let statusCarretas = {};
+let descarregamentoHistorico = {};
 
-// Função para ler o contador de viagens
-function readContador() {
+// Função para ler um arquivo JSON
+function readFile(filePath) {
     try {
-        const data = fs.readFileSync(contadorFilePath);
-        const parsedData = JSON.parse(data);
-        return parsedData.contador || 0;
-    } catch (error) {
-        console.error('Erro ao ler contador:', error);
-        return 0;
-    }
-}
-
-// Função para ler o histórico
-function readHistorico() {
-    try {
-        const data = fs.readFileSync(historicoFilePath);
+        const data = fs.readFileSync(filePath);
         return JSON.parse(data);
     } catch (error) {
-        console.error('Erro ao ler histórico:', error);
+        console.error(`Erro ao ler ${filePath}:`, error);
         return {};
     }
 }
 
-// Função para salvar o contador de viagens
-function saveContador() {
-    const data = JSON.stringify({ contador: contadorViagens }, null, 2);
-    fs.writeFileSync(contadorFilePath, data);
+// Função para salvar um objeto em um arquivo JSON
+function saveFile(filePath, data) {
+    const jsonData = JSON.stringify(data, null, 2);
+    fs.writeFileSync(filePath, jsonData);
 }
 
-// Função para salvar o histórico
-function saveHistorico() {
-    const data = JSON.stringify(historico, null, 2);
-    fs.writeFileSync(historicoFilePath, data);
-}
+contadorViagens = readFile(contadorFilePath).contador || 0;
+historicoCarretas = readFile(historicoFilePath);
+statusCarretas = readFile(statusFilePath);
+descarregamentoHistorico = readFile(descarregamentoFilePath);
 
-contadorViagens = readContador(); // Lê o contador do arquivo
-historico = readHistorico(); // Lê o histórico do arquivo
+console.log(`Servidor WebSocket rodando na porta ${process.env.PORT || 8080}`);
 
-console.log(`Servidor rodando na porta ${process.env.PORT || 8080}`);
+wss.on("connection", (ws) => {
+    console.log("Cliente conectado!");
 
-app.use(express.json()); // Middleware para JSON
-
-// Rota para obter o contador de viagens
-app.get('/contador', (req, res) => {
-    res.json({ contador: contadorViagens });
-});
-
-// Rota para obter o histórico
-app.get('/historico', (req, res) => {
-    res.json(historico);
-});
-
-// Rota para atualizar o contador de viagens
-app.post('/contador', (req, res) => {
-    contadorViagens = req.body.contador;
-    saveContador();
-    res.status(200).json({ contador: contadorViagens });
-});
-
-// Rota para atualizar o histórico de uma carreta
-app.post('/historico', (req, res) => {
-    const { carretaId, tipo, hora } = req.body;
-    if (!historico[carretaId]) {
-        historico[carretaId] = [];
-    }
-    historico[carretaId].push(`${tipo}: ${hora}`);
-    saveHistorico();
-    res.status(200).json({ historico: historico[carretaId] });
-});
-
-// Inicia o servidor Express
-app.listen(process.env.PORT || 3000, () => {
-    console.log('Servidor Express rodando!');
-});
-
-// WebSocket
-wss.on('connection', (ws) => {
-    console.log('Cliente conectado!');
-
-    // Envia o contador e histórico iniciais para o novo cliente
+    // Envia o estado inicial para o novo cliente
     ws.send(JSON.stringify({ tipo: 'contador-viagens', contador: contadorViagens }));
-    ws.send(JSON.stringify({ tipo: 'historico', historico }));
+    ws.send(JSON.stringify({ tipo: 'carregar-historico', historico: historicoCarretas }));
+    ws.send(JSON.stringify({ tipo: 'carregar-status', status: statusCarretas }));
+    ws.send(JSON.stringify({ tipo: 'carregar-historico-descarregamento', historico: descarregamentoHistorico }));
 
-    ws.on('message', (data) => {
+    ws.on("error", console.error);
+
+    ws.on("message", (data) => {
+        console.log("Mensagem recebida:", data);
+
         const mensagem = JSON.parse(data);
+        const { tipo, carretaId, hora } = mensagem;
 
         if (mensagem.tipo === 'incrementar-viagem') {
             contadorViagens++;
-            saveContador();
+            saveFile(contadorFilePath, { contador: contadorViagens });
 
+            // Envia o novo contador para todos os clientes conectados
+            wss.clients.forEach((client) => {
+                if (client.readyState === client.OPEN) {
+                    client.send(JSON.stringify({ tipo: 'contador-viagens', contador: contadorViagens }));
+                }
+            });
+        } else if (mensagem.tipo === 'finalizar-viagem') {
+            contadorViagens = 0;
+            saveFile(contadorFilePath, { contador: contadorViagens });
+
+            // Envia o contador zerado para todos os clientes
             wss.clients.forEach((client) => {
                 if (client.readyState === client.OPEN) {
                     client.send(JSON.stringify({ tipo: 'contador-viagens', contador: contadorViagens }));
                 }
             });
         } else if (mensagem.tipo === 'entrada-carregamento' || mensagem.tipo === 'saida-carregamento') {
-            const { carretaId, hora } = mensagem;
-            const tipo = mensagem.tipo === 'entrada-carregamento' ? 'Entrada' : 'Saída';
+            const { tipo, carretaId, hora } = mensagem;
+            historicoCarretas[carretaId] = historicoCarretas[carretaId] || [];
+            historicoCarretas[carretaId].push(`${tipo === 'entrada-carregamento' ? 'Entrada:' : 'Saída:'} ${hora}`);
+            saveFile(historicoFilePath, historicoCarretas);
 
-            // Atualiza o histórico no servidor
-            if (!historico[carretaId]) {
-                historico[carretaId] = [];
+            // Atualiza o status da carreta
+            if (tipo === 'entrada-carregamento') {
+                statusCarretas[carretaId] = 'Aguardando Carregamento';
+            } else if (tipo === 'saida-carregamento') {
+                statusCarretas[carretaId] = 'Em Percurso para Campo';
             }
-            historico[carretaId].push(`${tipo}: ${hora}`);
-            saveHistorico();
+            saveFile(statusFilePath, statusCarretas);
+
+            // Envia o histórico e status atualizados para todos os clientes conectados
+            wss.clients.forEach((client) => {
+                if (client.readyState === client.OPEN) {
+                    client.send(JSON.stringify({ tipo: 'atualizar-historico', carretaId, historico: historicoCarretas[carretaId] }));
+                    client.send(JSON.stringify({ tipo: 'atualizar-status', carretaId, status: statusCarretas[carretaId] }));
+                }
+            });
+        } else if (mensagem.tipo === 'entrada-descarregamento' || mensagem.tipo === 'saida-descarregamento') {
+            descarregamentoHistorico[carretaId] = descarregamentoHistorico[carretaId] || [];
+            descarregamentoHistorico[carretaId].push(`${tipo === 'entrada-descarregamento' ? 'Entrada:' : 'Saída:'} ${hora}`);
+            saveFile(descarregamentoFilePath, descarregamentoHistorico);
 
             // Envia o histórico atualizado para todos os clientes conectados
             wss.clients.forEach((client) => {
                 if (client.readyState === client.OPEN) {
-                    client.send(JSON.stringify({
-                        tipo: 'historico',
-                        historico: historico[carretaId]
-                    }));
+                    client.send(JSON.stringify({ tipo: 'atualizar-historico-descarregamento', carretaId, historico: descarregamentoHistorico[carretaId] }));
+                }
+            });
+        } else if (mensagem.tipo === 'limpar-historico') {
+            const { carretaId } = mensagem;
+            historicoCarretas[carretaId] = [];
+            statusCarretas[carretaId] = 'Sem status';
+            saveFile(historicoFilePath, historicoCarretas);
+            saveFile(statusFilePath, statusCarretas);
+
+            // Envia o histórico e status zerados para todos os clientes conectados
+            wss.clients.forEach((client) => {
+                if (client.readyState === client.OPEN) {
+                    client.send(JSON.stringify({ tipo: 'atualizar-historico', carretaId, historico: historicoCarretas[carretaId] }));
+                    client.send(JSON.stringify({ tipo: 'atualizar-status', carretaId, status: statusCarretas[carretaId] }));
+                }
+            });
+        } else if (mensagem.tipo === 'limpar-historico-descarregamento') {
+            const { carretaId } = mensagem;
+            descarregamentoHistorico[carretaId] = [];
+            saveFile(descarregamentoFilePath, descarregamentoHistorico);
+
+            // Envia o histórico zerado para todos os clientes conectados
+            wss.clients.forEach((client) => {
+                if (client.readyState === client.OPEN) {
+                    client.send(JSON.stringify({ tipo: 'atualizar-historico-descarregamento', carretaId, historico: descarregamentoHistorico[carretaId] }));
+                }
+            });
+        } else if (mensagem.tipo === 'resetar-status') {
+            const { carretaId, status } = mensagem;
+            statusCarretas[carretaId] = status;
+            saveFile(statusFilePath, statusCarretas);
+
+            // Envia o status atualizado para todos os clientes conectados
+            wss.clients.forEach((client) => {
+                if (client.readyState === client.OPEN) {
+                    client.send(JSON.stringify({ tipo: 'atualizar-status', carretaId, status }));
+                }
+            });
+        } else {
+            // Envia a mensagem recebida para todos os outros clientes conectados
+            wss.clients.forEach((client) => {
+                if (client !== ws && client.readyState === client.OPEN) {
+                    client.send(data.toString());
                 }
             });
         }
     });
 
-    ws.on('close', () => {
-        console.log('Cliente desconectado!');
+    ws.on("close", () => {
+        console.log("Cliente desconectado!");
     });
 });
