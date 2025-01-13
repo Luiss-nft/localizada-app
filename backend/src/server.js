@@ -13,13 +13,13 @@ const historicoFilePath = path.join(__dirname, "historicoCarretas.json");
 const statusFilePath = path.join(__dirname, "statusCarretas.json");
 const descarregamentoFilePath = path.join(__dirname, "historicoDescarregamento.json");
 
-// Inicialização dos dados
-let contadorViagens = 0;
-let historicoCarretas = {};
-let statusCarretas = {};
-let descarregamentoHistorico = {};
-
 // Funções auxiliares para manipulação de arquivos
+function ensureFileExists(filePath, defaultData) {
+    if (!fs.existsSync(filePath)) {
+        saveFile(filePath, defaultData);
+    }
+}
+
 function readFile(filePath) {
     try {
         const data = fs.readFileSync(filePath);
@@ -31,15 +31,24 @@ function readFile(filePath) {
 }
 
 function saveFile(filePath, data) {
-    const jsonData = JSON.stringify(data, null, 2);
-    fs.writeFileSync(filePath, jsonData);
+    try {
+        const jsonData = JSON.stringify(data, null, 2);
+        fs.writeFileSync(filePath, jsonData);
+    } catch (error) {
+        console.error(`Erro ao salvar ${filePath}:`, error);
+    }
 }
 
-// Carrega os dados iniciais
-contadorViagens = readFile(contadorFilePath).contador || 0;
-historicoCarretas = readFile(historicoFilePath);
-statusCarretas = readFile(statusFilePath);
-descarregamentoHistorico = readFile(descarregamentoFilePath);
+// Inicialização dos dados
+ensureFileExists(contadorFilePath, { contador: 0 });
+ensureFileExists(historicoFilePath, {});
+ensureFileExists(statusFilePath, {});
+ensureFileExists(descarregamentoFilePath, {});
+
+let contadorViagens = readFile(contadorFilePath).contador;
+let historicoCarretas = readFile(historicoFilePath);
+let statusCarretas = readFile(statusFilePath);
+let descarregamentoHistorico = readFile(descarregamentoFilePath);
 
 console.log(`Servidor WebSocket rodando na porta ${process.env.PORT || 8080}`);
 
@@ -82,7 +91,6 @@ wss.on("connection", (ws) => {
                     broadcast({ tipo: 'contador-viagens', contador: contadorViagens });
                     break;
 
-                // Carregamento
                 case 'entrada-carregamento':
                 case 'saida-carregamento':
                     if (carretaId && hora) {
@@ -100,7 +108,6 @@ wss.on("connection", (ws) => {
                     }
                     break;
 
-                // Descarregamento
                 case 'entrada-descarregamento':
                 case 'saida-descarregamento':
                     if (carretaId && hora) {
@@ -108,7 +115,6 @@ wss.on("connection", (ws) => {
                         descarregamentoHistorico[carretaId].push(`${tipo === 'entrada-descarregamento' ? 'Entrada:' : 'Saída:'} ${hora}`);
                         saveFile(descarregamentoFilePath, descarregamentoHistorico);
 
-                        // Atualizando o status da carreta no descarregamento
                         if (tipo === 'entrada-descarregamento') {
                             statusCarretas[carretaId] = 'Aguardando Descarregamento';
                         } else if (tipo === 'saida-descarregamento') {
