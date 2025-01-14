@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cálculo de Adubo</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(120deg, #84fab0, #03b143);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            background-color: white;
+            border-radius: 20px;
+            padding: 20px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            animation: fadeIn 0.6s ease-out;
+            text-align: center;
+        }
+
+        h2 {
+            font-size: 24px;
+            color: #03b143;
+            margin-bottom: 20px;
+        }
+
+        label {
+            font-size: 16px;
+            color: #555;
+            display: block;
+            margin-bottom: 5px;
+            text-align: left;
+        }
+
+        input {
+            width: calc(100% - 20px);
+            padding: 12px 10px;
+            font-size: 16px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            margin-bottom: 15px;
+            box-sizing: border-box;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #03b143;
+            box-shadow: 0 0 5px rgba(3, 177, 67, 0.5);
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 8px;
+            border: none;
+            color: white;
+            background-color: #03b143;
+            cursor: pointer;
+            transition: transform 0.2s ease, background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #028f34;
+            transform: translateY(-2px);
+        }
+
+        #ligarDesligarBtn {
+            width: 50px;
+            height: 26px;
+            background: #ddd;
+            border-radius: 13px;
+            position: relative;
+            margin: 0 auto 15px;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.4s ease, box-shadow 0.3s ease;
+        }
+
+        #ligarDesligarBtn:before {
+            content: '';
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            transition: left 0.3s ease;
+        }
+
+        #ligarDesligarBtn.on {
+            background-color: #03b143;
+        }
+
+        #ligarDesligarBtn.on:before {
+            left: 27px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            text-align: center;
+            padding: 10px;
+            font-size: 16px;
+        }
+
+        th {
+            background-color: #03b143;
+            color: white;
+        }
+
+        #trip-list {
+            text-align: left;
+        }
+
+        #trip-list-box {
+            max-height: 150px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 10px;
+            background-color: #f7f7f7;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        #trip-list ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        #trip-list li {
+            font-size: 14px;
+            margin-bottom: 8px;
+            background-color: #eef;
+            padding: 8px;
+            border-radius: 6px;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+            #calcularBtn{
+                width: 250px;
+              
+            }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Cálculo de Adubo</h2>
+        <label for="hectares">Hectares:</label>
+        <input type="number" id="hectares" placeholder="Digite os hectares" required>
+        <label for="adubo">Adubo:</label>
+        <input type="number" id="adubo" placeholder="Digite o valor de adubo" required>
+        <button id="calcularBtn">Calcular</button>
+        <button id="ligarDesligarBtn"></button>
+
+        <table>
+            <tr>
+                <th>Valor por Carreta</th>
+                <th>Valor por Tanque</th>
+            </tr>
+            <tr>
+                <td id="valorCarreta">-</td>
+                <td id="valorTanque">-</td>
+            </tr>
+        </table>
+
+        <button id="enviarBtn">Enviar</button>
+        <div id="trip-list">
+            <h3>Lista de Viagens</h3>
+            <div id="trip-list-box">
+                <ul id="viagens"></ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const ws = new WebSocket('wss://localizada-app.onrender.com');
+        let aduboRestante = 0;
+        let calcularCom50 = false;
+
+        function calcularAdubo() {
+            const hectares = parseFloat(document.getElementById('hectares').value);
+            const adubo = parseFloat(document.getElementById('adubo').value);
+
+            if (isNaN(hectares) || isNaN(adubo)) {
+                alert('Por favor, insira valores válidos.');
+                return;
+            }
+
+            let valorPorCarreta = adubo / hectares;
+            if (calcularCom50) valorPorCarreta *= 1.5;
+            const valorPorTanque = valorPorCarreta / 2;
+
+            document.getElementById('valorCarreta').textContent = valorPorCarreta.toFixed(2);
+            document.getElementById('valorTanque').textContent = valorPorTanque.toFixed(2);
+
+            aduboRestante = adubo;
+            document.getElementById('viagens').innerHTML = '';
+
+            let viagemCount = 1;
+            while (aduboRestante >= valorPorCarreta) {
+                const viagemItem = document.createElement('li');
+                viagemItem.textContent = `Viagem ${viagemCount}: Adubo restante: ${aduboRestante.toFixed(2)} `;
+                document.getElementById('viagens').appendChild(viagemItem);
+                aduboRestante -= valorPorCarreta;
+                if (aduboRestante < 0) aduboRestante = 0;
+                viagemCount++;
+            }
+
+            ws.send(JSON.stringify({
+                tipo: 'calculo-adubo',
+                hectares,
+                adubo,
+                valorPorCarreta,
+                valorPorTanque
+            }));
+        }
+
+        function enviarDados() {
+            const hectares = parseFloat(document.getElementById('hectares').value);
+            const adubo = parseFloat(document.getElementById('adubo').value);
+            const valorPorCarreta = parseFloat(document.getElementById('valorCarreta').textContent);
+            const valorPorTanque = parseFloat(document.getElementById('valorTanque').textContent);
+
+            if (isNaN(valorPorCarreta) || isNaN(valorPorTanque)) {
+                alert('Calcule os valores primeiro.');
+                return;
+            }
+
+            ws.send(JSON.stringify({
+                tipo: 'salvar-adubo',
+                hectares,
+                adubo,
+                valorPorCarreta,
+                valorPorTanque
+            }));
+        }
+
+        function toggleCalculo50() {
+            calcularCom50 = !calcularCom50;
+            const btn = document.getElementById('ligarDesligarBtn');
+            if (calcularCom50) {
+                btn.classList.add('on');
+            } else {
+                btn.classList.remove('on');
+            }
+        }
+
+        document.getElementById('calcularBtn').addEventListener('click', calcularAdubo);
+        document.getElementById('enviarBtn').addEventListener('click', enviarDados);
+        document.getElementById('ligarDesligarBtn').addEventListener('click', toggleCalculo50);
+
+        ws.onopen = () => console.log('Conectado ao servidor WebSocket');
+        ws.onmessage = (event) => console.log('Mensagem do servidor:', JSON.parse(event.data));
+        ws.onerror = (error) => console.error('Erro WebSocket:', error);
+        ws.onclose = () => console.log('Desconectado do servidor WebSocket');
+
+        const tripListBox = document.getElementById('trip-list-box');
+        tripListBox.addEventListener('wheel', (e) => {
+            const delta = e.deltaY;
+            if (
+                (delta > 0 && tripListBox.scrollTop + tripListBox.clientHeight >= tripListBox.scrollHeight) ||
+                (delta < 0 && tripListBox.scrollTop === 0)
+            ) {
+                e.preventDefault();
+            }
+        });
+    </script>
+</body>
+</html>
