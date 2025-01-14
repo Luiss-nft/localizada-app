@@ -1,7 +1,7 @@
 {
   "tipo": "salvar-adubo",
-  "hectares": 333,
-  "adubo": 3,
-  "valorPorCarreta": 0.01,
-  "valorPorTanque": 0.01
+  "hectares": 44,
+  "adubo": 4,
+  "valorPorCarreta": 0.09,
+  "valorPorTanque": 0.05
 }

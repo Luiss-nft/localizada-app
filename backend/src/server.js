@@ -45,10 +45,6 @@ function saveAduboToFile(data) {
     console.log("Salvando dados no arquivo calculoAdubo.json:", data); // Log para depuração
     try {
         const jsonData = JSON.stringify(data, null, 2);
-
-        // Cria o arquivo se não existir
-        ensureFileExists(calculoAduboFilePath, {});  // Certifica-se de que o arquivo existe
-
         fs.writeFileSync(calculoAduboFilePath, jsonData);
         console.log("Dados salvos em calculoAdubo.json");
     } catch (error) {
@@ -93,7 +89,7 @@ wss.on("connection", (ws) => {
     ws.on("message", (data) => {
         try {
             const mensagem = JSON.parse(data);
-            const { tipo, hectares, adubo, valorPorCarreta, valorPorTanque } = mensagem;
+            const { tipo, carretaId, hora } = mensagem;
 
             switch (tipo) {
                 case 'incrementar-viagem':
@@ -144,23 +140,40 @@ wss.on("connection", (ws) => {
                     }
                     break;
 
+                case 'limpar-historico':
+                    if (carretaId) {
+                        historicoCarretas[carretaId] = [];
+                        statusCarretas[carretaId] = 'Sem status';
+                        saveFile(historicoFilePath, historicoCarretas);
+                        saveFile(statusFilePath, statusCarretas);
+
+                        broadcast({ tipo: 'atualizar-historico', carretaId, historico: historicoCarretas[carretaId] });
+                        broadcast({ tipo: 'atualizar-status', carretaId, status: statusCarretas[carretaId] });
+                    }
+                    break;
+
+                case 'limpar-historico-descarregamento':
+                    if (carretaId) {
+                        descarregamentoHistorico[carretaId] = [];
+                        saveFile(descarregamentoFilePath, descarregamentoHistorico);
+
+                        broadcast({ tipo: 'atualizar-historico-descarregamento', carretaId, historico: descarregamentoHistorico[carretaId] });
+                    }
+                    break;
+
+                case 'resetar-status':
+                    if (carretaId && mensagem.status) {
+                        statusCarretas[carretaId] = mensagem.status;
+                        saveFile(statusFilePath, statusCarretas);
+
+                        broadcast({ tipo: 'atualizar-status', carretaId, status: mensagem.status });
+                    }
+                    break;
+
                 case 'salvar-adubo':
                     console.log("Dados para salvar:", mensagem); // Log para depuração
                     // Salva os dados do cálculo de adubo em um arquivo JSON
                     saveAduboToFile(mensagem);
-                    break;
-
-                case 'calculo-adubo':
-                    console.log(`Cálculo de adubo recebido: hectares = ${hectares}, adubo = ${adubo}, valor por carreta = ${valorPorCarreta}, valor por tanque = ${valorPorTanque}`);
-                    // Responde ao cliente com os resultados do cálculo
-                    ws.send(JSON.stringify({
-                        tipo: 'resposta-calculo-adubo',
-                        sucesso: true,
-                        hectares: hectares,
-                        adubo: adubo,
-                        valorPorCarreta: valorPorCarreta,
-                        valorPorTanque: valorPorTanque
-                    }));
                     break;
 
                 default:
